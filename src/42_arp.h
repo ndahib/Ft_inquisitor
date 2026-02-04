@@ -1,18 +1,20 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   42_arpa.h                                          :+:      :+:    :+:   */
+/*   42_arp.h                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ndahib <ndahib@student.1337.ma>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/30 10:51:36 by ndahib            #+#    #+#             */
-/*   Updated: 2026/02/04 11:59:50 by ndahib           ###   ########.fr       */
+/*   Updated: 2026/02/04 12:00:09 by ndahib           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
+#include <stddef.h>
 
 #include <netinet/in.h>
 #include <netinet/ip.h>
@@ -23,14 +25,17 @@
 #include <netinet/udp.h>
 #include <arpa/inet.h>
 
+
 #include <pcap.h>
 #include <sys/types.h>
+#include <string.h>
 
-#define	REQUEST = 0x001
-#define	REPLY = 0x002
+#define	REQUEST = 0x001;
+#define	REPLY = 0x002;
 #define	RARP_REQUEST = 0x003;
 #define	RARP_REPLY = 0x004;
-bool g_silence_mode = false
+
+bool g_silence_mode = false;
 
 typedef struct s_eth_header
 {
@@ -52,3 +57,9 @@ typedef struct s_arp_packet
 	u_int8_t	target_ip_addr[4]; 		    //ip
 	t_eth_header	*eth_header;
 }	t_arp_packet;
+
+void	print_error(char *msg);
+void	print_operation(char *msg, int flag);
+void	is_valid_ip_addr(char *ipV4);
+void	is_valid_ip_mac(char *mac);
+void	is_valid_mac_addr(char *mac);

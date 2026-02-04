@@ -9,10 +9,10 @@ int main(int ac, char **av)
         perror("Examples :192.168.10.45, aa.bb.cc.dd.ee.ff, 192.168.10.47, a0.b0.c0.d0.e0.f0\n");
     }
     
-    is_valid_ip(av[1]);
-    is_valid_ip(av[3]);
-    is_valid_mac(av[2]);
-    is_valid_mac(av[4]);
+    is_valid_ip_addr(av[1]);
+    is_valid_ip_addr(av[3]);
+    is_valid_mac_addr(av[2]);
+    is_valid_mac_addr(av[4]);
 
     
     return (1);

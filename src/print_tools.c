@@ -2,13 +2,15 @@
 
 void	print_error(char *msg)
 {
-	perror(&msg);
+	perror(msg);
 }
 
 void	print_operation(char *msg, int flag)
 {
-    if (g_silence_mode)
-    {
-		print(&msg);
-    }
+  if (flag)
+    return;
+  if (g_silence_mode)
+  {
+	  printf(msg);
+  }
 }
