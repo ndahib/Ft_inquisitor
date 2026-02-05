@@ -15,6 +15,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <unistd.h>
 
 #include <netinet/in.h>
 #include <netinet/ip.h>
@@ -29,13 +30,14 @@
 #include <pcap.h>
 #include <sys/types.h>
 #include <string.h>
+#include <ctype.h>
 
 #define	REQUEST = 0x001;
 #define	REPLY = 0x002;
 #define	RARP_REQUEST = 0x003;
 #define	RARP_REPLY = 0x004;
 
-bool g_silence_mode = false;
+extern bool g_silence_mode;
 
 typedef struct s_eth_header
 {
@@ -60,6 +62,5 @@ typedef struct s_arp_packet
 
 void	print_error(char *msg);
 void	print_operation(char *msg, int flag);
-void	is_valid_ip_addr(char *ipV4);
-void	is_valid_ip_mac(char *mac);
-void	is_valid_mac_addr(char *mac);
+int		is_valid_ip_addr(const char *ipV4);
+int		is_valid_mac_addr(const char *mac);

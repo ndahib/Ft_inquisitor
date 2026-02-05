@@ -5,8 +5,7 @@ int main(int ac, char **av)
 {
     
     if (ac != 5){
-        perror("Please enter the Ip source, the Mac source, the target Ip source, The Mac source \n");
-        perror("Examples :192.168.10.45, aa.bb.cc.dd.ee.ff, 192.168.10.47, a0.b0.c0.d0.e0.f0\n");
+        print_error("Please enter the Ip source, the Mac source, the target Ip source, The Mac source.\n -> Examples :192.168.10.45, aa.bb.cc.dd.ee.ff, 192.168.10.47, a0.b0.c0.d0.e0.f0\n");
     }
     
     is_valid_ip_addr(av[1]);
@@ -15,5 +14,5 @@ int main(int ac, char **av)
     is_valid_mac_addr(av[4]);
 
     
-    return (1);
+    return (0);
 }

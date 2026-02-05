@@ -1,105 +1,111 @@
 #include <42_arp.h>
 
-void	is_valid_ip_addr(char *ipV4)
+int	is_valid_ip_addr(const char *ipV4)
 {
-	size_t len;
-	size_t i;
+	// size_t len;
 	int octet;
 	char *tokens;
 	int octet_count;
-	const char del[2] = ".";
-	
+	char *dup_ipV4;
 	octet_count = 0;
 	
-	print_operation(strcat("Cheking ip address: ", ipV4), 0);
-	
-	len = strlen(ipV4);
-	if (len > 15 || len < 7)
-	{
-		print_error("%s is Invalid: the ipV4 format should be alwyas x.x.x.x");
-	}
-	tokens = strtok(ipV4, del);
-
+	printf("Checking ip address: %s\n", ipV4);
+	// len = strlen(ipV4);
+	// if (len > 15 || len < 7)
+	// 	print_error("%s is Invalid: the ipV4 format should be alwyas x.x.x.x");
+	dup_ipV4 = strdup(ipV4);
+	tokens = strtok(dup_ipV4, (const char *)("."));
 	while (tokens != NULL){
-		i = 0;
 		if (octet_count >= 4)
 		{
+			free(dup_ipV4);
+			while(1);
 			print_error("Invalid IP: there should be exactly 4 octets");
 		}
-		octet = atoi(tokens);
-		if (octet < 0 && octet > 255){
-			print_error("%s is Invalid: each octet in ipV4 address should be ranged from 0 to 255");
-		};
-		while (i < strlen(tokens))
-		{
-			if (tokens[i] < '0' || tokens[i] > '9') {
-				free(tokens);
+		for (size_t i = 0; i < strlen(tokens); i++)
+		{	
+			if (!isdigit(tokens[i]))
+			{
+				free(dup_ipV4);
 				print_error("Invalid IP: octet contains non-numeric characters");
 			}
-			i++;
 		}
+		octet = atoi(tokens);
+		if (octet < 0 || octet > 255){
+			free(dup_ipV4);
+			print_error("Invalid IP: each octet in ipV4 address should be ranged from 0 to 255");
+		};
 		octet_count++;
-		tokens = strtok(NULL, del);
+		tokens = strtok(NULL, (const char *)("."));
 
 	}
 	if (octet_count != 4)
 	{
-		free(tokens);
+		free(dup_ipV4);
 		print_error("Invalid IP: there should be exactly 4 octets");
 	}
-	free(tokens);
-
+	free(dup_ipV4);
+	return (1);
 }
 
-void	is_valid_mac_addr(char *mac)
+int is_valid_mac_addr(const char *mac)
 {
-	size_t len;
-	// size_t i;
-	// int digits;
-	char *tokens;
-	int	digit_count;
-	const char del[2] = ".";
-	
+    size_t len;
+    int octet;
+    char *tokens;
+    int octet_count;
+    char *dup_mac;
+    
+    octet_count = 0;
+    printf("Checking MAC address: %s\n", mac);
 
-	digit_count = 0;
-	
-	print_operation(strcat("Cheking ip address: ", mac), 0);
-	
-	len = strlen(mac);
-	if (len > 17)
-	{
-		print_error("%s is Invalid: the mac format should be alwyas xx.xx.xx.xx.xx.xx");
-		print_error("Example: 00:1b:63:84:45:e6");
-	}
-	tokens = strtok(mac, del);
 
-	while (tokens != NULL){
-		// i = 0;
-		if (digit_count >= 6)
-		{
-			print_error("Invalid MAC: there should be exactly 6 six pairs of two-digit");
-		}
-		// digits = atoi(tokens);
-		// if (digits < 0 && digits > 255){
-		// 	print_error("%s is Invalid: each octet in ipV4 address should be ranged from 0 to 255");
-		// };
-		// while (i < strlen(tokens))
-		// {
-		// 	if (tokens[i] < '0' || tokens[i] > '9') {
-		// 		free(tokens);
-		// 		print_error("Invalid IP: octet contains non-numeric characters");
-		// 	}
-		// 	i++;
-		// }
-		digit_count++;
-		tokens = strtok(NULL, del);
+    len = strlen(mac);
+    if (len != 17)
+        print_error("%s is Invalid: a MAC address should be exactly 17 characters long");
 
-	}
-	if (digit_count != 6)
-	{
-		free(tokens);
-		print_error("Invalid Mac: there should be exactly 6 six pairs of two-digit");
-	}
-	free(tokens);
 
+    dup_mac = strdup(mac);
+    tokens = strtok(dup_mac, ":");
+    while (tokens != NULL)
+    {
+        if (octet_count >= 6)
+        {
+            free(dup_mac);
+            print_error("Invalid MAC address: there should be exactly 6 octets");
+        }
+        if (strlen(tokens) != 2)
+        {
+            free(dup_mac);
+            print_error("Invalid MAC address: each octet should be exactly 2 characters long");
+        }
+
+        for (size_t i = 0; i < strlen(tokens); i++)
+        {
+            if (!isxdigit(tokens[i]))
+            {
+                free(dup_mac);
+                print_error("Invalid MAC address: octet contains non-hexadecimal characters");
+            }
+        }
+
+        octet = (int)strtol(tokens, NULL, 16);
+        if (octet < 0 || octet > 255)
+        {
+            free(dup_mac);
+            print_error("Invalid MAC address: each octet in a MAC address should be in the range 00 to FF");
+        }
+
+        octet_count++;
+        tokens = strtok(NULL, ":");
+    }
+
+    if (octet_count != 6)
+    {
+        free(dup_mac);
+        print_error("Invalid MAC address: there should be exactly 6 octets");
+    }
+
+    free(dup_mac);
+    return 1;
 }

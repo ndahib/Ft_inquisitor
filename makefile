@@ -6,7 +6,7 @@
 #    By: ndahib <ndahib@student.1337.ma>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/02/04 11:03:01 by ndahib            #+#    #+#              #
-#    Updated: 2026/02/04 12:32:14 by ndahib           ###   ########.fr        #
+#    Updated: 2026/02/05 08:17:22 by ndahib           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -24,7 +24,7 @@ OBJS        := $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
 #=== Commands & Flags ==========================================================
 CC          := cc
-CFLAGS      := -Wall -Wextra -Werror -g -fsanitize=address -I $(INC_DIR)
+CFLAGS      := -Wall -Wextra -Werror  -I $(INC_DIR)
 LDFLAGS     := -lpcap
 RM          := rm -rf
 
