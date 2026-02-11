@@ -12,14 +12,16 @@ int	is_valid_ip_addr(const char *ipV4)
 	printf("Checking ip address: %s\n", ipV4);
 	len = strlen(ipV4);
 	if (len > 15 || len < 7)
-		print_error("%s is Invalid: the ipV4 format should be alwyas x.x.x.x");
+		print_error("Invalid: the ipV4 format should be alwyas x.x.x.x");
 	dup_ipV4 = strdup(ipV4);
+	if (!dup_ipV4) {
+    print_error("Memory allocation failed");
+}
 	tokens = strtok(dup_ipV4, (const char *)("."));
 	while (tokens != NULL){
 		if (octet_count >= 4)
 		{
 			free(dup_ipV4);
-			while(1);
 			print_error("Invalid IP: there should be exactly 4 octets");
 		}
 		for (size_t i = 0; i < strlen(tokens); i++)
@@ -117,8 +119,8 @@ void    fill_packet(t_arp_packet *packet, char **av)
 	struct ether_addr	*source_eth_addr;
 	struct ether_addr	*target_eth_addr;
 
-    memset(&source_eth_addr, 0, sizeof(struct ether_addr));
-	memset(&target_eth_addr, 0, sizeof(struct ether_addr));
+	source_eth_addr = NULL;
+	target_eth_addr = NULL;
     if (inet_pton(AF_INET, av[1], source_ip) != 1){
 		fprintf(stderr, "Invalid IPv4 format %s: \n", av[1]);
 		exit(EXIT_FAILURE);
@@ -134,6 +136,10 @@ void    fill_packet(t_arp_packet *packet, char **av)
 		fprintf(stderr, "Invalid Mac format %s: \n", av[2]);
 		exit(EXIT_FAILURE);	
 	}
+	memcpy(packet->eth_header.ethernet_source_addr, 
+		   source_eth_addr->ether_addr_octet, ETH_ALEN);
+	packet->eth_header.ethernet_frame_type = htons(ETHERTYPE_ARP);
+	memcpy(packet->sender_eth_addr, source_eth_addr->ether_addr_octet, ETH_ALEN);
 
 	target_eth_addr = ether_aton(av[4]);
 	if (target_eth_addr == NULL)
@@ -141,36 +147,92 @@ void    fill_packet(t_arp_packet *packet, char **av)
 		fprintf(stderr, "Invalid Mac format %s: \n", av[4]);
 		exit(EXIT_FAILURE);	
 	}
+	memcpy(packet->eth_header.ethernet_destination_addr, 
+		target_eth_addr->ether_addr_octet, ETH_ALEN);
+	memcpy(packet->target_eth_addr, target_eth_addr->ether_addr_octet, ETH_ALEN);
+	
 
-    //header
-    memcpy(packet->eth_header.ethernet_source_addr, source_eth_addr->ether_addr_octet, ETH_ALEN);
-    memcpy(packet->eth_header.ethernet_destination_addr, target_eth_addr->ether_addr_octet, ETH_ALEN);
-    packet->eth_header.ethernet_frame_type = htons(ETHERTYPE_ARP);
-
-    //arp_packet
     packet->hard_type = htons(ARPHRD_ETHER);
     packet->hard_size = 6;
-
     packet->prot_type = htons(ETHERTYPE_IP);
     packet->prot_size = 4;
-
     packet->operation = htons(REPLY);
-    memcpy(packet->sender_eth_addr, source_eth_addr->ether_addr_octet, ETH_ALEN);
+
     memcpy(packet->sender_ip_addr, source_ip, 4);
-    memcpy(packet->target_eth_addr, target_eth_addr->ether_addr_octet, ETH_ALEN);
     memcpy(packet->target_ip_addr, target_ip, 4);
 }
 
-void    send_packet(t_arp_packet *packet)
+int    create_socket(const char *if_name)
 {
     int sock_fd;
-    struct sockaddr_ll  addr;
-
-    sock_fd = socket(AF_PACKET, SOCK_RAW, IP_PROTOCOL);
+    struct ifreq if_idx;
+    
+    sock_fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ARP));
     if(sock_fd < 0)
     {
-        perror("Failed to create socket :");
+        perror("Failed to create socket");
         exit(EXIT_FAILURE);
     }
+    
+    memset(&if_idx, 0, sizeof(struct ifreq));
+    strncpy(if_idx.ifr_name, if_name, IFNAMSIZ - 1);
+    if (ioctl(sock_fd, SIOCGIFINDEX, &if_idx) < 0)
+    {
+        perror("SIOCGIFINDEX");
+        close(sock_fd);
+        exit(EXIT_FAILURE);
+    }
+    
+    struct sockaddr_ll sll;
+    memset(&sll, 0, sizeof(struct sockaddr_ll));
+    sll.sll_family = AF_PACKET;
+    sll.sll_ifindex = if_idx.ifr_ifindex;
+    sll.sll_protocol = htons(ETH_P_ARP);
+    
+    if (bind(sock_fd, (struct sockaddr*)&sll, sizeof(sll)) < 0)
+    {
+        perror("bind");
+        close(sock_fd);
+        exit(EXIT_FAILURE);
+    }
+    
+    printf("Socket created and bound to interface %s (index: %d)\n", 
+           if_name, if_idx.ifr_ifindex);
+    
+    return (sock_fd);
+}
+void send_packet(t_arp_packet *packet, int sock_fd)
+{
+	const char			*if_name;
+    ssize_t				sent_bytes;
+    struct sockaddr_ll	sock_address;
 
+    if_name = "eth0";
+    memset(&sock_address, 0, sizeof(struct sockaddr_ll));
+
+    sock_address.sll_family = PF_PACKET;
+    sock_address.sll_protocol = htons(ETH_P_ARP);
+    sock_address.sll_ifindex = if_nametoindex(if_name);
+	memcpy(sock_address.sll_addr, packet->eth_header.ethernet_destination_addr, ETH_ALEN);
+
+    if (sock_address.sll_ifindex == 0)
+    {
+        perror("Interface eth0 not found");
+        close(sock_fd);
+        return;
+    }
+
+    sent_bytes = sendto(sock_fd, packet, sizeof(*packet),
+                        0,
+                        (struct sockaddr *)&sock_address,
+                        sizeof(sock_address));
+    if (sent_bytes == -1)
+    {
+        perror("sendto");
+        return;
+    }
+	printf("Sent ARP packet (%ld bytes) on interface %s\n", sent_bytes, if_name);
+    printf("  Destination MAC: ");
+    print_mac(packet->eth_header.ethernet_destination_addr);
+    printf("\n");
 }

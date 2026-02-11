@@ -10,28 +10,27 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdlib.h>
-#include <stddef.h>
 #include <unistd.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
+#include <ctype.h>
+#include <stdbool.h>
 
-
-#include <pcap.h>
-#include <net/if.h>
-#include <arpa/inet.h>
 #include <netinet/in.h>
-#include <netinet/ip.h>
-#include <netinet/udp.h>
-#include <netinet/tcp.h>
-#include <net/ethernet.h>
 #include <netinet/if_ether.h>
+#include <net/ethernet.h>
+#include <net/if.h>
+#include <netinet/ip.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <netpacket/packet.h>
+#include <net/if_arp.h>
+#include <net/ethernet.h>
 #include <netinet/ether.h>
+#include <linux/if.h>
+#include <pcap.h>
 
 #define	REQUEST  0x001
 #define	REPLY  0x002
@@ -58,7 +57,7 @@ typedef struct s_arp_packet
 	u_int16_t	operation;
 	u_int8_t	sender_eth_addr[ETH_ALEN];	//mac
 	u_int8_t	sender_ip_addr[4];			//ip
-	u_int8_t	target_eth_addr[ETH_ALEN];			//mac
+	u_int8_t	target_eth_addr[ETH_ALEN];	//mac
 	u_int8_t	target_ip_addr[4];			//ip
 	t_eth_header	eth_header;
 }	t_arp_packet;
@@ -69,3 +68,6 @@ int		is_valid_ip_addr(const char *ipV4);
 int		is_valid_mac_addr(const char *mac);
 void    fill_packet(t_arp_packet *packet, char **av);
 void	print_packet_info(t_arp_packet *packet);
+void	send_packet(t_arp_packet *packet, int sock_fd);
+int		create_socket(const char *if_name);
+void    print_mac(u_int8_t *mac);
