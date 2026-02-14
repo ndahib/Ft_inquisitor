@@ -236,3 +236,30 @@ void send_packet(t_arp_packet *packet, int sock_fd)
     print_mac(packet->eth_header.ethernet_destination_addr);
     printf("\n");
 }
+
+void pcap_send_packet(t_arp_packet *packet)
+{
+	char	errbuf[PCAP_ERRBUF_SIZE];
+	pcap_t	*handle;
+	char	*interface;
+	unsigned char	*string_packet;
+
+	string_packet = NULL;
+	memcpy(string_packet, packet, sizeof(t_arp_packet));
+	interface = "eth0";
+	handle = pcap_open_live(interface,BUFSIZ, 1, 1000, errbuf);
+	if (handle == NULL)
+	{
+		fprintf(stderr, "Couldn't open device %s: %s\n", interface, errbuf);
+		return;
+	}
+	if (pcap_inject(handle, string_packet, sizeof(string_packet)) == -1) {
+        pcap_perror(handle, "Error injecting packet");
+        pcap_close(handle);
+        return ;
+    }
+	printf("Packet sent successfully!\n");
+
+    pcap_close(handle);
+    return ;
+}

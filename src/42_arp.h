@@ -30,7 +30,7 @@
 #include <net/ethernet.h>
 #include <netinet/ether.h>
 #include <linux/if.h>
-#include <pcap.h>
+#include <pcap/pcap.h>
 
 #define	REQUEST  0x001
 #define	REPLY  0x002
@@ -71,3 +71,4 @@ void	print_packet_info(t_arp_packet *packet);
 void	send_packet(t_arp_packet *packet, int sock_fd);
 int		create_socket(const char *if_name);
 void    print_mac(u_int8_t *mac);
+void	pcap_send_packet(t_arp_packet *packet);

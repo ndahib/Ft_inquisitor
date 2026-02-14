@@ -34,7 +34,8 @@ int main(int ac, char **av)
 
 	sock_fd = create_socket(interface);
 	dump_packet_hex(&arp_packet);
-	send_packet(&arp_packet, sock_fd);
+	// send_packet(&arp_packet, sock_fd);
+	pcap_send_packet(&arp_packet);
 
 	close(sock_fd);
 	return (0);

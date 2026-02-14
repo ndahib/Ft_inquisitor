@@ -6,7 +6,7 @@
 #    By: ndahib <ndahib@student.1337.ma>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/02/04 11:03:01 by ndahib            #+#    #+#              #
-#    Updated: 2026/02/05 08:17:22 by ndahib           ###   ########.fr        #
+#    Updated: 2026/02/14 06:55:02 by ndahib           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -40,7 +40,7 @@ all: $(NAME)
 
 
 $(NAME): $(OBJS)
-	@$(CC) $(CFLAGS) $(OBJS) -o $(NAME) $(LDFLAGS)
+	@$(CC) $(CFLAGS) $(OBJS) -lpcap -o $(NAME) $(LDFLAGS)
 	@printf "$(GREEN)[OK] $(CYAN)$(NAME) linked successfully!$(DEF)\n"
 
 
