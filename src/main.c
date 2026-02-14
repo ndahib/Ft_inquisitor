@@ -1,6 +1,16 @@
 #include <stdio.h>
 #include <42_arp.h>
 
+void dump_packet_hex(t_arp_packet *packet) {
+    printf("\n=== PACKET HEX DUMP ===\n");
+    unsigned char *bytes = (unsigned char *)packet;
+    for (size_t i = 0; i < sizeof(t_arp_packet); i++) {
+        printf("%02x ", bytes[i]);
+        if ((i + 1) % 16 == 0) printf("\n");
+    }
+    printf("\n========================\n");
+}
+
 int main(int ac, char **av)
 {
 	int sock_fd;
@@ -23,6 +33,7 @@ int main(int ac, char **av)
 	print_packet_info(&arp_packet);
 
 	sock_fd = create_socket(interface);
+	dump_packet_hex(&arp_packet);
 	send_packet(&arp_packet, sock_fd);
 
 	close(sock_fd);

@@ -50,6 +50,7 @@ typedef struct s_eth_header
 
 typedef struct s_arp_packet
 {
+	t_eth_header	eth_header;
 	u_int16_t	hard_type;
 	u_int16_t	prot_type;
 	u_int8_t	hard_size;
@@ -59,7 +60,6 @@ typedef struct s_arp_packet
 	u_int8_t	sender_ip_addr[4];			//ip
 	u_int8_t	target_eth_addr[ETH_ALEN];	//mac
 	u_int8_t	target_ip_addr[4];			//ip
-	t_eth_header	eth_header;
 }	t_arp_packet;
 
 void	print_error(char *msg);
