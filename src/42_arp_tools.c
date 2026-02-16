@@ -112,7 +112,7 @@ int is_valid_mac_addr(const char *mac)
     return 1;
 }
 
-void    fill_packet(t_arp_packet *packet, char **av)
+void	fill_packet(t_arp_packet *packet,const char* mysrc_ip, const char* mysrc_mac, const char* mytarget_ip, const char* my_target_mac)
 {
     uint8_t				source_ip[4];
     uint8_t				target_ip[4];
@@ -121,19 +121,19 @@ void    fill_packet(t_arp_packet *packet, char **av)
 
 	source_eth_addr = NULL;
 	target_eth_addr = NULL;
-    if (inet_pton(AF_INET, av[1], source_ip) != 1){
-		fprintf(stderr, "Invalid IPv4 format %s: \n", av[1]);
+    if (inet_pton(AF_INET, mysrc_ip, source_ip) != 1){
+		fprintf(stderr, "Invalid IPv4 format %s: \n", mysrc_ip);
 		exit(EXIT_FAILURE);
 	}
-	if (inet_pton(AF_INET, av[3], target_ip) != 1)
+	if (inet_pton(AF_INET, mytarget_ip, target_ip) != 1)
 	{
-		fprintf(stderr, "Invalid IPv4 format %s: \n", av[3]);
+		fprintf(stderr, "Invalid IPv4 format %s: \n", mytarget_ip);
 		exit(EXIT_FAILURE);		
 	}
-    source_eth_addr = ether_aton(av[2]);
+    source_eth_addr = ether_aton(mysrc_mac);
 	if (source_eth_addr == NULL)
 	{
-		fprintf(stderr, "Invalid Mac format %s: \n", av[2]);
+		fprintf(stderr, "Invalid Mac format %s: \n", mysrc_mac);
 		exit(EXIT_FAILURE);	
 	}
 	memcpy(packet->eth_header.ethernet_source_addr, 
@@ -141,10 +141,10 @@ void    fill_packet(t_arp_packet *packet, char **av)
 	packet->eth_header.ethernet_frame_type = htons(ETHERTYPE_ARP);
 	memcpy(packet->sender_eth_addr, source_eth_addr->ether_addr_octet, ETH_ALEN);
 
-	target_eth_addr = ether_aton(av[4]);
+	target_eth_addr = ether_aton(my_target_mac);
 	if (target_eth_addr == NULL)
 	{
-		fprintf(stderr, "Invalid Mac format %s: \n", av[4]);
+		fprintf(stderr, "Invalid Mac format %s: \n", my_target_mac);
 		exit(EXIT_FAILURE);	
 	}
 	memcpy(packet->eth_header.ethernet_destination_addr, 
@@ -237,15 +237,67 @@ void send_packet(t_arp_packet *packet, int sock_fd)
     printf("\n");
 }
 
+char	*get_default_gateway_ip(const char	*interface)
+{
+	FILE	*fp;
+	char	line[256];
+	char	iface[64];
+	unsigned long	dest;
+	unsigned long	gateway;
+	
+	fp =  fopen("/proc/net/route", "r");
+	if (fp == NULL){
+		perror("fopen");
+		return (NULL);
+	}
+	while (fgets(line, sizeof(line), fp)) {
+        if (sscanf(line, "%s %lx %lx", iface, &dest, &gateway) == 3) {
+            if (strcmp(iface, interface) == 0 && dest == 0) {
+                struct in_addr gw_addr;
+                gw_addr.s_addr = gateway;
+                printf("Gateway of %s: %s\n", interface, inet_ntoa(gw_addr));
+				return (inet_ntoa(gw_addr));
+            }
+        }
+    }
+	return (NULL);
+}
+
+char	*get_default_gateway_mac(const char	*gateway_ip)
+{
+	FILE	*fp;
+	char	line[256];
+	char	ip[64];
+	char	hw_addr[64];
+	char	device[64];
+	int		hw_type, flags;
+	
+	fp =  fopen("/proc/net/arp", "r");
+	if (fp == NULL){
+		perror("fopen");
+		return (NULL);
+	}
+	fgets(line, sizeof(line), fp);
+	while (fgets(line, sizeof(line), fp)) {
+        if (sscanf(line, "%63s 0x%x 0x%x %63s %*s %63s",
+                   ip, &hw_type, &flags, hw_addr, device) == 5) {
+
+            if (strcmp(ip, gateway_ip) == 0) {
+                fclose(fp);
+                return strdup(hw_addr);
+            }
+        }
+    }
+	return (NULL);	
+}
+
 void pcap_send_packet(t_arp_packet *packet)
 {
 	char	errbuf[PCAP_ERRBUF_SIZE];
 	pcap_t	*handle;
 	char	*interface;
-	unsigned char	*string_packet;
 
-	string_packet = NULL;
-	memcpy(string_packet, packet, sizeof(t_arp_packet));
+
 	interface = "eth0";
 	handle = pcap_open_live(interface,BUFSIZ, 1, 1000, errbuf);
 	if (handle == NULL)
@@ -253,7 +305,7 @@ void pcap_send_packet(t_arp_packet *packet)
 		fprintf(stderr, "Couldn't open device %s: %s\n", interface, errbuf);
 		return;
 	}
-	if (pcap_inject(handle, string_packet, sizeof(string_packet)) == -1) {
+	if (pcap_inject(handle, packet, sizeof(t_arp_packet)) == -1) {
         pcap_perror(handle, "Error injecting packet");
         pcap_close(handle);
         return ;

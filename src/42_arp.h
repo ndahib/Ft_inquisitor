@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <ctype.h>
 #include <stdbool.h>
+#include <fcntl.h>
 
 #include <netinet/in.h>
 #include <netinet/if_ether.h>
@@ -66,9 +67,12 @@ void	print_error(char *msg);
 void	print_operation(char *msg, int flag);
 int		is_valid_ip_addr(const char *ipV4);
 int		is_valid_mac_addr(const char *mac);
-void    fill_packet(t_arp_packet *packet, char **av);
+void	fill_packet(t_arp_packet *packet,const char* src_ip, const char* src_mac, const char* target_ip, const char* target_mac);
 void	print_packet_info(t_arp_packet *packet);
 void	send_packet(t_arp_packet *packet, int sock_fd);
 int		create_socket(const char *if_name);
 void    print_mac(u_int8_t *mac);
 void	pcap_send_packet(t_arp_packet *packet);
+char	*get_default_gateway_ip(const char	*interface);
+void	dump_packet_hex(t_arp_packet *packet);
+char	*get_default_gateway_mac(const char	*gateway_ip);

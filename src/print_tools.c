@@ -51,3 +51,15 @@ void print_packet_info(t_arp_packet *packet) {
     print_ip(packet->target_ip_addr);
     printf("\n=============================\n");
 }
+
+
+void dump_packet_hex(t_arp_packet *packet) 
+{
+    printf("\n=== PACKET HEX DUMP ===\n");
+    unsigned char *bytes = (unsigned char *)packet;
+    for (size_t i = 0; i < sizeof(t_arp_packet); i++) {
+        printf("%02x ", bytes[i]);
+        if ((i + 1) % 16 == 0) printf("\n");
+    }
+    printf("\n========================\n");
+}
