@@ -34,8 +34,8 @@ int main(int ac, char **av)
 	{
 		return (-1);
 	}
-	fill_packet(&arp_packet_to_target, av[1], av[2], av[3], av[4]);
-	fill_packet(&arp_packet_to_gateway, av[1], av[2], gateway_ip, gateway_mac);
+	fill_packet(&arp_packet_to_target, gateway_ip, av[2], av[3], av[4]);
+	fill_packet(&arp_packet_to_gateway, av[3], av[2], gateway_ip, gateway_mac);
 	print_packet_info(&arp_packet_to_target);
 	print_packet_info(&arp_packet_to_gateway);
 
