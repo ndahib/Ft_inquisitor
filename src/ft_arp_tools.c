@@ -1,4 +1,4 @@
-#include <42_arp.h>
+#include <ft_arp.h>
 
 int	is_valid_ip_addr(const char *ipV4)
 {
@@ -9,7 +9,6 @@ int	is_valid_ip_addr(const char *ipV4)
 	char *dup_ipV4;
 	octet_count = 0;
 	
-	printf("Checking ip address: %s\n", ipV4);
 	len = strlen(ipV4);
 	if (len > 15 || len < 7)
 		print_error("Invalid: the ipV4 format should be alwyas x.x.x.x");
@@ -59,7 +58,6 @@ int is_valid_mac_addr(const char *mac)
     char *dup_mac;
     
     octet_count = 0;
-    printf("Checking MAC address: %s\n", mac);
 
 
     len = strlen(mac);
@@ -255,7 +253,6 @@ char	*get_default_gateway_ip(const char	*interface)
             if (strcmp(iface, interface) == 0 && dest == 0) {
                 struct in_addr gw_addr;
                 gw_addr.s_addr = gateway;
-                printf("Gateway of %s: %s\n", interface, inet_ntoa(gw_addr));
 				return (inet_ntoa(gw_addr));
             }
         }
@@ -291,27 +288,60 @@ char	*get_default_gateway_mac(const char	*gateway_ip)
 	return (NULL);	
 }
 
-void pcap_send_packet(t_arp_packet *packet)
+void pcap_send_packet(t_arp_packet *packet, pcap_t *handle)
 {
-	char	errbuf[PCAP_ERRBUF_SIZE];
-	pcap_t	*handle;
-	char	*interface;
-
-
-	interface = "eth0";
-	handle = pcap_open_live(interface,BUFSIZ, 1, 1000, errbuf);
-	if (handle == NULL)
-	{
-		fprintf(stderr, "Couldn't open device %s: %s\n", interface, errbuf);
-		return;
-	}
 	if (pcap_inject(handle, packet, sizeof(t_arp_packet)) == -1) {
         pcap_perror(handle, "Error injecting packet");
         pcap_close(handle);
         return ;
     }
-	printf("Packet sent successfully!\n");
-
-    pcap_close(handle);
     return ;
+}
+
+void packet_handler(unsigned char *user_data, const struct pcap_pkthdr *pkthdr, const unsigned char *packet) 
+{
+    struct ether_header *eth_header;
+    struct ip *ip_header;
+    struct tcphdr *tcp_header;
+
+    eth_header = (struct ether_header *)packet;
+    (void)user_data;
+    
+    if (ntohs(eth_header->ether_type) == ETHERTYPE_IP) {
+        ip_header = (struct ip *)(packet + ETHER_HDR_LEN);
+        
+        if (ip_header->ip_p == IPPROTO_TCP) {
+            tcp_header = (struct tcphdr *)(packet + ETHER_HDR_LEN + (ip_header->ip_hl * 4));
+            
+            if (ntohs(tcp_header->th_sport) == 21 || ntohs(tcp_header->th_dport) == 21) {
+                // printf("\n=== FTP Packet Captured ===\n");
+                // printf("Packet length: %d\n", pkthdr->len);
+                // printf("Source IP: %s\n", inet_ntoa(*(struct in_addr*)&ip_header->ip_src));
+                // printf("Destination IP: %s\n", inet_ntoa(*(struct in_addr*)&ip_header->ip_dst));
+                // printf("Source Port: %d\n", ntohs(tcp_header->th_sport));
+                // printf("Destination Port: %d\n", ntohs(tcp_header->th_dport));
+
+
+                int ip_header_len = ip_header->ip_hl * 4;
+                int tcp_header_len = tcp_header->th_off * 4;
+                int payload_offset = ETHER_HDR_LEN + ip_header_len + tcp_header_len;
+                int payload_length = pkthdr->len - payload_offset;
+
+                if (payload_length > 0) {
+                    const unsigned char *payload = packet + payload_offset;
+
+                    if (is_ftp_command(payload, payload_length)) {
+                        printf("FTP Command Detected: ");
+                        if (strncmp((char *)payload, "STOR", 4) == 0) {
+                            printf("STOR ");
+                        } else if (strncmp((char *)payload, "RETR", 4) == 0) {
+                            printf("RETR ");
+                        }
+                        extract_filename(payload, payload_length);
+						printf("=======================\n\n");
+                    }
+                }
+            }
+        }
+    }
 }
