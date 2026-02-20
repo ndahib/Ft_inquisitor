@@ -160,80 +160,80 @@ void	fill_packet(t_arp_packet *packet,const char* mysrc_ip, const char* mysrc_ma
     memcpy(packet->target_ip_addr, target_ip, 4);
 }
 
-int    create_socket(const char *if_name)
-{
-    int sock_fd;
-    struct ifreq if_idx;
+// int    create_socket(const char *if_name)
+// {
+//     int sock_fd;
+//     struct ifreq if_idx;
     
-    sock_fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ARP));
-    if(sock_fd < 0)
-    {
-        perror("Failed to create socket");
-        exit(EXIT_FAILURE);
-    }
+//     sock_fd = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ARP));
+//     if(sock_fd < 0)
+//     {
+//         perror("Failed to create socket");
+//         exit(EXIT_FAILURE);
+//     }
     
-    memset(&if_idx, 0, sizeof(struct ifreq));
-    strncpy(if_idx.ifr_name, if_name, IFNAMSIZ - 1);
-    if (ioctl(sock_fd, SIOCGIFINDEX, &if_idx) < 0)
-    {
-        perror("SIOCGIFINDEX");
-        close(sock_fd);
-        exit(EXIT_FAILURE);
-    }
+//     memset(&if_idx, 0, sizeof(struct ifreq));
+//     strncpy(if_idx.ifr_name, if_name, IFNAMSIZ - 1);
+//     if (ioctl(sock_fd, SIOCGIFINDEX, &if_idx) < 0)
+//     {
+//         perror("SIOCGIFINDEX");
+//         close(sock_fd);
+//         exit(EXIT_FAILURE);
+//     }
     
-    struct sockaddr_ll sll;
-    memset(&sll, 0, sizeof(struct sockaddr_ll));
-    sll.sll_family = AF_PACKET;
-    sll.sll_ifindex = if_idx.ifr_ifindex;
-    sll.sll_protocol = htons(ETH_P_ARP);
+//     struct sockaddr_ll sll;
+//     memset(&sll, 0, sizeof(struct sockaddr_ll));
+//     sll.sll_family = AF_PACKET;
+//     sll.sll_ifindex = if_idx.ifr_ifindex;
+//     sll.sll_protocol = htons(ETH_P_ARP);
     
-    if (bind(sock_fd, (struct sockaddr*)&sll, sizeof(sll)) < 0)
-    {
-        perror("bind");
-        close(sock_fd);
-        exit(EXIT_FAILURE);
-    }
+//     if (bind(sock_fd, (struct sockaddr*)&sll, sizeof(sll)) < 0)
+//     {
+//         perror("bind");
+//         close(sock_fd);
+//         exit(EXIT_FAILURE);
+//     }
     
-    printf("Socket created and bound to interface %s (index: %d)\n", 
-           if_name, if_idx.ifr_ifindex);
+//     printf("Socket created and bound to interface %s (index: %d)\n", 
+//            if_name, if_idx.ifr_ifindex);
     
-    return (sock_fd);
-}
-void send_packet(t_arp_packet *packet, int sock_fd)
-{
-	const char			*if_name;
-    ssize_t				sent_bytes;
-    struct sockaddr_ll	sock_address;
+//     return (sock_fd);
+// }
+// void send_packet(t_arp_packet *packet, int sock_fd)
+// {
+// 	const char			*if_name;
+//     ssize_t				sent_bytes;
+//     struct sockaddr_ll	sock_address;
 
-    if_name = "eth0";
-    memset(&sock_address, 0, sizeof(struct sockaddr_ll));
+//     if_name = "eth0";
+//     memset(&sock_address, 0, sizeof(struct sockaddr_ll));
 
-    sock_address.sll_family = PF_PACKET;
-    sock_address.sll_protocol = htons(ETH_P_ARP);
-    sock_address.sll_ifindex = if_nametoindex(if_name);
-	memcpy(sock_address.sll_addr, packet->eth_header.ethernet_destination_addr, ETH_ALEN);
+//     sock_address.sll_family = PF_PACKET;
+//     sock_address.sll_protocol = htons(ETH_P_ARP);
+//     sock_address.sll_ifindex = if_nametoindex(if_name);
+// 	memcpy(sock_address.sll_addr, packet->eth_header.ethernet_destination_addr, ETH_ALEN);
 
-    if (sock_address.sll_ifindex == 0)
-    {
-        perror("Interface eth0 not found");
-        close(sock_fd);
-        return;
-    }
+//     if (sock_address.sll_ifindex == 0)
+//     {
+//         perror("Interface eth0 not found");
+//         close(sock_fd);
+//         return;
+//     }
 
-    sent_bytes = sendto(sock_fd, packet, sizeof(*packet),
-                        0,
-                        (struct sockaddr *)&sock_address,
-                        sizeof(sock_address));
-    if (sent_bytes == -1)
-    {
-        perror("sendto");
-        return;
-    }
-	printf("Sent ARP packet (%ld bytes) on interface %s\n", sent_bytes, if_name);
-    printf("  Destination MAC: ");
-    print_mac(packet->eth_header.ethernet_destination_addr);
-    printf("\n");
-}
+//     sent_bytes = sendto(sock_fd, packet, sizeof(*packet),
+//                         0,
+//                         (struct sockaddr *)&sock_address,
+//                         sizeof(sock_address));
+//     if (sent_bytes == -1)
+//     {
+//         perror("sendto");
+//         return;
+//     }
+// 	printf("Sent ARP packet (%ld bytes) on interface %s\n", sent_bytes, if_name);
+//     printf("  Destination MAC: ");
+//     print_mac(packet->eth_header.ethernet_destination_addr);
+//     printf("\n");
+// }
 
 char	*get_default_gateway_ip(const char	*interface)
 {
@@ -285,7 +285,7 @@ char	*get_default_gateway_mac(const char	*gateway_ip)
             }
         }
     }
-	return (NULL);	
+	return (NULL);
 }
 
 void pcap_send_packet(t_arp_packet *packet, pcap_t *handle)
@@ -295,6 +295,7 @@ void pcap_send_packet(t_arp_packet *packet, pcap_t *handle)
         pcap_close(handle);
         return ;
     }
+    printf("Packet Send!");
     return ;
 }
 

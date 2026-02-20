@@ -32,6 +32,7 @@
 #include <netinet/ether.h>
 #include <linux/if.h>
 #include <pcap.h>
+#include <time.h>
 #include <signal.h>
 #include <netinet/tcp.h>
 
