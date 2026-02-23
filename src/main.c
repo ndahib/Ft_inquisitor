@@ -45,7 +45,6 @@ void cleanup()
 void sigint_handler(int signum) 
 {
 	(void)signum;
-	printf("enter her signal");
 	g_running = false;
 }
 

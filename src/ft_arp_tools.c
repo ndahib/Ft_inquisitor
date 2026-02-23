@@ -295,7 +295,6 @@ void pcap_send_packet(t_arp_packet *packet, pcap_t *handle)
         pcap_close(handle);
         return ;
     }
-    printf("Packet Send!");
     return ;
 }
 
